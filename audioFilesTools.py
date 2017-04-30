@@ -9,12 +9,13 @@ def isMono(filename):
 	return audiofile.info.mode == 'Mono'
 
 def getGenre(filename):
-	audiofile = eyed3.load(filename)
+	return filename[filename.rfind('/') + 1 : filename.find(".")]
+	#audiofile = eyed3.load(filename)
 	#No genre
-	if not audiofile.tag.genre:
-		return None
-	else:
-		return audiofile.tag.genre.name.encode('utf-8')
+	#if not audiofile.tag.genre:
+	#	return None
+	#else:
+	#	return audiofile.tag.genre.name.encode('utf-8')
 
 
 

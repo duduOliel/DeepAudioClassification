@@ -22,10 +22,13 @@ eyed3.log.setLevel("ERROR")
 #Create spectrogram from mp3 files
 def createSpectrogram(filename,newFilename):
 	#Create temporary mono track if needed
-	if isMono(rawDataPath+filename):
-		command = "cp '{}' '/tmp/{}.mp3'".format(rawDataPath+filename,newFilename)
+	#if isMono(rawDataPath+filename):
+	if isMono(filename):
+		#command = "cp '{}'  '/tmp/{}.mp3'".format(rawDataPath+filename,newFilename)
+		command = "cp '{}'  '/tmp/{}.mp3'".format(filename,newFilename)
 	else:
-		command = "sox '{}' '/tmp/{}.mp3' remix 1,2".format(rawDataPath+filename,newFilename)
+		#command = "sox '{}' '/tmp/{}.mp3' remix 1,2".format(rawDataPath+filename,newFilename)
+		command = "sox '{}' '/tmp/{}.mp3' remix 1,2".format(filename,newFilename)
 	p = Popen(command, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True, cwd=currentPath)
 	output, errors = p.communicate()
 	if errors:
@@ -45,7 +48,8 @@ def createSpectrogram(filename,newFilename):
 #Creates .png whole spectrograms from mp3 files
 def createSpectrogramsFromAudio():
 	genresID = dict()
-	files = os.listdir(rawDataPath)
+	#files = os.listdir(rawDataPath)
+	files = [os.path.join(dp, f) for dp, dn, fn in os.walk(os.path.expanduser(rawDataPath)) for f in fn]
 	files = [file for file in files if file.endswith(".mp3")]
 	nbFiles = len(files)
 
