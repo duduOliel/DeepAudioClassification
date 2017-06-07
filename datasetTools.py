@@ -13,7 +13,7 @@ import pickle
 from imageFilesTools import getImageData
 from config import datasetPath
 from config import slicesPath
-
+_rootpath = ""
 #Creates name of dataset from parameters
 def getDatasetName(nbPerGenre, sliceSize):
     name = "{}".format(nbPerGenre)
@@ -22,9 +22,10 @@ def getDatasetName(nbPerGenre, sliceSize):
 
 #Creates or loads dataset if it exists
 #Mode = "train" or "test"
-def getDataset(nbPerGenre, genres, sliceSize, validationRatio, testRatio, mode):
+def getDataset(rootpath, nbPerGenre, genres, sliceSize, validationRatio, testRatio, mode):
+    _rootpath = rootpath
     print("[+] Dataset name: {}".format(getDatasetName(nbPerGenre,sliceSize)))
-    if not os.path.isfile(datasetPath+"train_X_"+getDatasetName(nbPerGenre, sliceSize)+".p"):
+    if not os.path.isfile(_rootpath+datasetPath+"train_X_"+getDatasetName(nbPerGenre, sliceSize)+".p"):
         print("[+] Creating dataset with {} slices of size {} per genre... ⌛️".format(nbPerGenre,sliceSize))
         createDatasetFromSlices(nbPerGenre, genres, sliceSize, validationRatio, testRatio) 
     else:
@@ -39,8 +40,8 @@ def loadDataset(nbPerGenre, genres, sliceSize, mode):
     datasetName = getDatasetName(nbPerGenre, sliceSize)
     if mode == "train":
         print("[+] Loading training and validation datasets... ")
-        train_X = pickle.load(open("{}train_X_{}.p".format(datasetPath,datasetName), "rb" ))
-        train_y = pickle.load(open("{}train_y_{}.p".format(datasetPath,datasetName), "rb" ))
+        train_X = pickle.load(open("{}train_X_{}.p".format(_rootpath+datasetPath,datasetName), "rb" ))
+        train_y = pickle.load(open("{}train_y_{}.p".format(_rootpath+datasetPath,datasetName), "rb" ))
         validation_X = pickle.load(open("{}validation_X_{}.p".format(datasetPath,datasetName), "rb" ))
         validation_y = pickle.load(open("{}validation_y_{}.p".format(datasetPath,datasetName), "rb" ))
         print("    Training and validation datasets loaded! ✅")
@@ -48,17 +49,18 @@ def loadDataset(nbPerGenre, genres, sliceSize, mode):
 
     else:
         print("[+] Loading testing dataset... ")
-        test_X = pickle.load(open("{}test_X_{}.p".format(datasetPath,datasetName), "rb" ))
-        test_y = pickle.load(open("{}test_y_{}.p".format(datasetPath,datasetName), "rb" ))
+        test_X = pickle.load(open("{}test_X_{}.p".format(_rootpath+datasetPath,datasetName), "rb" ))
+        test_y = pickle.load(open("{}test_y_{}.p".format(_rootpath+datasetPath,datasetName), "rb" ))
         print("    Testing dataset loaded! ✅")
         return test_X, test_y
 
 #Saves dataset
 def saveDataset(train_X, train_y, validation_X, validation_y, test_X, test_y, nbPerGenre, genres, sliceSize):
      #Create path for dataset if not existing
-    if not os.path.exists(os.path.dirname(datasetPath)):
+
+    if not os.path.exists(os.path.dirname(_rootpath+datasetPath)):
         try:
-            os.makedirs(os.path.dirname(datasetPath))
+            os.makedirs(os.path.dirname(_rootpath+datasetPath))
         except OSError as exc: # Guard against race condition
             if exc.errno != errno.EEXIST:
                 raise
@@ -66,12 +68,12 @@ def saveDataset(train_X, train_y, validation_X, validation_y, test_X, test_y, nb
     #SaveDataset
     print("[+] Saving dataset... ")
     datasetName = getDatasetName(nbPerGenre, sliceSize)
-    pickle.dump(train_X, open("{}train_X_{}.p".format(datasetPath,datasetName), "wb" ))
-    pickle.dump(train_y, open("{}train_y_{}.p".format(datasetPath,datasetName), "wb" ))
-    pickle.dump(validation_X, open("{}validation_X_{}.p".format(datasetPath,datasetName), "wb" ))
-    pickle.dump(validation_y, open("{}validation_y_{}.p".format(datasetPath,datasetName), "wb" ))
-    pickle.dump(test_X, open("{}test_X_{}.p".format(datasetPath,datasetName), "wb" ))
-    pickle.dump(test_y, open("{}test_y_{}.p".format(datasetPath,datasetName), "wb" ))
+    pickle.dump(train_X, open("{}train_X_{}.p".format(_rootpath+datasetPath,datasetName), "wb" ))
+    pickle.dump(train_y, open("{}train_y_{}.p".format(_rootpath+datasetPath,datasetName), "wb" ))
+    pickle.dump(validation_X, open("{}validation_X_{}.p".format(_rootpath+datasetPath,datasetName), "wb" ))
+    pickle.dump(validation_y, open("{}validation_y_{}.p".format(_rootpath+datasetPath,datasetName), "wb" ))
+    pickle.dump(test_X, open("{}test_X_{}.p".format(_rootpath+datasetPath,datasetName), "wb" ))
+    pickle.dump(test_y, open("{}test_y_{}.p".format(_rootpath+datasetPath,datasetName), "wb" ))
     print("    Dataset saved! ✅💾")
 
 #Creates and save dataset from slices
@@ -80,7 +82,7 @@ def createDatasetFromSlices(nbPerGenre, genres, sliceSize, validationRatio, test
     for genre in genres:
         print("-> Adding {}...".format(genre))
         #Get slices in genre subfolder
-        filenames = os.listdir(slicesPath+genre)
+        filenames = os.listdir(_rootpath+slicesPath+genre)
         filenames = [filename for filename in filenames if filename.endswith('.png')]
         filenames = filenames[:nbPerGenre]
         #Randomize file selection for this genre
@@ -88,7 +90,7 @@ def createDatasetFromSlices(nbPerGenre, genres, sliceSize, validationRatio, test
 
         #Add data (X,y)
         for filename in filenames:
-            imgData = getImageData(slicesPath+genre+"/"+filename, sliceSize)
+            imgData = getImageData(_rootpath+slicesPath+genre+"/"+filename, sliceSize)
             label = [1. if genre == g else 0. for g in genres]
             data.append((imgData,label))
 
