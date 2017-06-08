@@ -1,2 +1,2 @@
-model_checkpoint_path: "musicDNN.tflearn"
-all_model_checkpoint_paths: "musicDNN.tflearn"
+model_checkpoint_path: "/home/project71/project/DeepAudioClassification/musicDNN.tflearn"
+all_model_checkpoint_paths: "/home/project71/project/DeepAudioClassification/musicDNN.tflearn"

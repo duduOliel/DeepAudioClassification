@@ -79,7 +79,7 @@ if "test" in args.mode:
 if "identify" in args.mode:
 	print("[+] Start to identify...")
 	createSlicesFromAudio(identifyPath)
-	sys.exit()
+	#sys.exit()
 	# Create or load new dataset
 	identify_X, identify_y = getDataset(identifyPath, filesPerGenre, genres, sliceSize, validationRatio, testRatio, mode="identify")
 
