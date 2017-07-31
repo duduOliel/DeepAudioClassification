@@ -40,3 +40,31 @@ def sliceSpectrogram(rootPath, filename, desiredSize):
 		imgTmp = img.crop((startPixel, 1, startPixel + desiredSize, desiredSize + 1))
 		imgTmp.save(rootPath + slicesPath+"{}/{}_{}.png".format(genre,filename[:-4],i))
 
+#TODO Improvement - Make sure we don't miss the end of the song
+def sliceSpectrogramToIdentify(rootPath, filename, desiredSize):
+
+	# Load the full spectrogram
+	img = Image.open(rootPath + spectrogramsPath + filename)
+
+	#Compute approximate number of 128x128 samples
+	width, height = img.size
+	nbSamples = int(width/desiredSize)
+	width - desiredSize
+
+	#Create path if not existing
+	slicePath = slicesPath + filename ;
+	slicePath = slicePath[:-4] + '/';
+	if not os.path.exists(os.path.dirname(rootPath + slicePath)):
+		try:
+			os.makedirs(os.path.dirname(rootPath + slicePath))
+		except OSError as exc: # Guard against race condition
+			if exc.errno != errno.EEXIST:
+				raise
+
+	#For each sample
+	for i in range(nbSamples):
+		print "Creating slice: ", (i+1), "/", nbSamples, "for", filename
+		#Extract and save 128x128 sample
+		startPixel = i*desiredSize
+		imgTmp = img.crop((startPixel, 1, startPixel + desiredSize, desiredSize + 1))
+		imgTmp.save(rootPath + slicePath  + "{}_{}.png".format(filename[:-4],i))

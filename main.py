@@ -4,9 +4,12 @@ import string
 import os
 import sys
 import numpy as np
+from shutil import rmtree
+from shutil import copyfile
 
 from model import createModel
 from datasetTools import getDataset
+from datasetTools import getData
 from config import slicesPath
 from config import batchSize
 from config import filesPerGenre
@@ -15,8 +18,12 @@ from config import validationRatio, testRatio
 from config import sliceSize
 from config import trainPath
 from config import identifyPath
+from config import rawDataPath
+from config import outputPath
+from config import spectrogramsPath
 
 from songToData import createSlicesFromAudio
+from songToData import createSlicesForIdentify
 
 import argparse
 parser = argparse.ArgumentParser()
@@ -78,20 +85,66 @@ if "test" in args.mode:
 # need to check, i write on blind
 if "identify" in args.mode:
 	print("[+] Start to identify...")
-	createSlicesFromAudio(identifyPath)
-	#sys.exit()
-	# Create or load new dataset
-	identify_X, identify_y = getDataset(identifyPath, filesPerGenre, genres, sliceSize, validationRatio, testRatio, mode="identify")
 
+	try:
+		rmtree(identifyPath + slicesPath)
+	except OSError as e:
+		print
 
-	# Load weights
+	try:
+		rmtree(identifyPath + spectrogramsPath)
+	except OSError as e:
+		print
+
+	try:
+		rmtree(identifyPath + outputPath)
+	except OSError as e:
+		print
+
+	os.makedirs(identifyPath + slicesPath)
+	os.makedirs(identifyPath + spectrogramsPath)
+	os.makedirs(identifyPath + outputPath)
+
+	createSlicesForIdentify()
+	print()
+
+	#Load weights
 	print("[+] Loading weights...")
 	model.load('musicDNN.tflearn')
 	print("    Weights loaded! ✅")
 
-	testAccuracy = model.evaluate(identify_X, identify_y)[0]
+	# identify_X, identify_y = getDataset(identifyPath, filesPerGenre, genres, sliceSize, validationRatio, testRatio,
+	# 									mode="identify")
+    #
+    # testAccuracy = model.evaluate(identify_X, identify_y)[0]
 
-	#now we need to debug and understand how the vector identify_x and identify_y is built and like that print the song name, the Prediction genre and the truth
-	# and understand how the testAccuracy built to get the Prediction
-	for i in range(len(identify_y)):
-		print('song {} was classified as {}'.format(fileNames[i], alphabet[results[i]]))
+	for filename in os.listdir(identifyPath + slicesPath):
+		X = getData(filename)
+		Y = model.predict_label(X)
+		print(filename + " genere is: " + genres[Y.argmax(1)[0]])
+		outputTo = identifyPath + outputPath + genres[Y.argmax(1)[0]] + "/"
+		if not os.path.exists(outputTo):
+			try:
+				os.makedirs(os.path.dirname(outputTo))
+			except OSError as exc:  # Guard against race condition
+				print
+		copyfile(identifyPath + rawDataPath +filename, outputTo + filename)
+
+
+	# createSlicesFromAudio(identifyPath)
+	# #sys.exit()
+	# # Create or load new dataset
+	# identify_X, identify_y = getDataset(identifyPath, filesPerGenre, genres, sliceSize, validationRatio, testRatio, mode="identify")
+    #
+    #
+	# # Load weights
+	# print("[+] Loading weights...")
+	# model.load('musicDNN.tflearn')
+	# print("    Weights loaded! ✅")
+    #
+	# testAccuracy = model.evaluate(identify_X, identify_y)[0]
+    #
+	# #now we need to debug and understand how the vector identify_x and identify_y is built and like that print the song name, the Prediction genre and the truth
+	# # and understand how the testAccuracy built to get the Prediction
+	# for i in range(len(identify_y)):
+	# 	print('song {} was classified as {}'.format(fileNames[i], alphabet[results[i]]))

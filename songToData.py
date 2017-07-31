@@ -5,11 +5,12 @@ from PIL import Image
 import eyed3
 
 from sliceSpectrogram import createSlicesFromSpectrograms
+from sliceSpectrogram import sliceSpectrogramToIdentify
 from audioFilesTools import isMono, getGenre
 from config import rawDataPath
 from config import spectrogramsPath
 from config import pixelPerSecond
-
+from config import identifyPath
 _rootPath = ""
 #Tweakable parameters
 desiredSize = 128
@@ -23,10 +24,11 @@ eyed3.log.setLevel("ERROR")
 #Create spectrogram from mp3 files
 def createSpectrogram(rootPath,filename,newFilename):
 	#Create temporary mono track if needed
-	if isMono(_rootPath + rawDataPath+filename):
-		command = "cp '{}' '/tmp/{}.mp3'".format(rootPath + rawDataPath + filename,newFilename)
-	else:
-		command = "sox '{}' '/tmp/{}.mp3' remix 1,2".format(_rootPath + rawDataPath + filename,newFilename)
+#	if isMono(rootPath + rawDataPath+filename):
+
+	command = "cp '{}' '/tmp/{}.mp3'".format(rootPath + rawDataPath + filename,newFilename)
+#	else:
+#		command = "sox '{}' '/tmp/{}.mp3' remix 1,2".format(_rootPath + rawDataPath + filename,newFilename)
 	p = Popen(command, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True, cwd=currentPath)
 	output, errors = p.communicate()
 	if errors:
@@ -41,8 +43,10 @@ def createSpectrogram(rootPath,filename,newFilename):
 		print errors
 
 	#Remove tmp mono track
-	os.remove("/tmp/{}.mp3".format(newFilename))
-
+	try:
+		os.remove("/tmp/{}.mp3".format(newFilename))
+	except OSError as exc:
+		print
 #Creates .png whole spectrograms from mp3 files
 def createSpectrogramsFromAudio(rootPath):
 	genresID = dict()
@@ -70,6 +74,27 @@ def createSpectrogramsFromAudio(rootPath):
 		else:
 			print("couldn't identify genre for " + filename)
 
+
+#Creates .png whole spectrograms from mp3 files
+def createSlicesForIdentify():
+	genresID = dict()
+	files = os.listdir(identifyPath + rawDataPath)
+	files = [file for file in files if file.endswith(".mp3")]
+	nbFiles = len(files)
+
+	for index,filename in enumerate(files):
+		print "Creating spectrogram for file {}/{}...".format(index+1,nbFiles)
+		createSpectrogram(identifyPath, filename,filename)
+
+	print "Spectrograms created!"
+
+	print "Creating slices..."
+	for filename in os.listdir(identifyPath + spectrogramsPath):
+		if filename.endswith(".png"):
+			sliceSpectrogramToIdentify(identifyPath, filename, desiredSize)
+
+	print "Slices created!"
+	
 #Whole pipeline .mp3 -> .png slices
 def createSlicesFromAudio(rootPath):
 	_rootPath = rootPath
